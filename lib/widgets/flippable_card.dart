@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/memory_card.dart';
+import 'cached_pokemon_sprite.dart';
 
 class FlippableCard extends StatefulWidget {
   const FlippableCard({
@@ -142,26 +143,7 @@ class _CardFront extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(6),
-                child: Image.network(
-                  card.pokemon.spriteUrl,
-                  fit: BoxFit.contain,
-                  cacheWidth: 180,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.image_not_supported,
-                    size: 40,
-                    color: Colors.grey,
-                  ),
-                  loadingBuilder: (_, child, progress) {
-                    if (progress == null) return child;
-                    return const Center(
-                      child: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    );
-                  },
-                ),
+                child: CachedPokemonSprite(pokemon: card.pokemon),
               ),
             ),
             Container(

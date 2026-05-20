@@ -8,7 +8,7 @@ class PokemonInfo {
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png';
 }
 
-/// Curated list — sprites load from PokeAPI CDN (network required).
+/// Curated list — sprites download once, then load from on-device cache.
 const List<PokemonInfo> kPokemonCatalog = [
   PokemonInfo(id: 1, name: 'Bulbasaur'),
   PokemonInfo(id: 4, name: 'Charmander'),
