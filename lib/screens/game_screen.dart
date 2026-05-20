@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:vibration/vibration.dart';
 
 import '../data/pokemon_catalog.dart';
 import '../models/memory_card.dart';
@@ -70,7 +71,10 @@ class _GameScreenState extends State<GameScreen> {
     final card = _cards[index];
     if (_busy || card.isMatched || card.isFaceUp) return;
 
-    HapticFeedback.lightImpact();
+    // 檢查裝置是否支援震動，並只震動 30 毫秒（非常輕微短促的點擊感）
+    if (await Vibration.hasVibrator()) {
+      Vibration.vibrate(duration: 200);
+    }
     setState(() {
       card.isFaceUp = true;
       _flippedIndices.add(index);
@@ -116,9 +120,7 @@ class _GameScreenState extends State<GameScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('You caught them all!'),
-        content: Text(
-          'Moves: $_moves\nTime: ${_formatTime(_elapsedSeconds)}',
-        ),
+        content: Text('Moves: $_moves\nTime: ${_formatTime(_elapsedSeconds)}'),
         actions: [
           TextButton(
             onPressed: () {
@@ -195,7 +197,10 @@ class _GameScreenState extends State<GameScreen> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 child: GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -241,7 +246,11 @@ class _StatChip extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
-          BoxShadow(color: Color(0x15000000), blurRadius: 4, offset: Offset(0, 2)),
+          BoxShadow(
+            color: Color(0x15000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
