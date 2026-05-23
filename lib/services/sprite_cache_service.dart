@@ -3,20 +3,21 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
-import '../data/pokemon_catalog.dart';
+import '../models/character_info.dart';
+import '../themes/memory_theme.dart';
+import '../themes/pokemon_theme.dart';
 
-/// Disk cache for PokeAPI sprites — survives app restarts and works offline.
-class PokemonSpriteCacheManager extends CacheManager {
-  PokemonSpriteCacheManager._()
+class ThemeSpriteCacheManager extends CacheManager {
+  ThemeSpriteCacheManager._()
       : super(
           Config(
-            'pokemon_sprite_cache',
+            'theme_sprite_cache',
             stalePeriod: const Duration(days: 365),
-            maxNrOfCacheObjects: 64,
+            maxNrOfCacheObjects: 200,
           ),
         );
 
-  static final PokemonSpriteCacheManager instance = PokemonSpriteCacheManager._();
+  static final ThemeSpriteCacheManager instance = ThemeSpriteCacheManager._();
 }
 
 class CacheWarmProgress {
@@ -35,44 +36,54 @@ class CacheWarmProgress {
 }
 
 class SpriteCacheService {
-  SpriteCacheService({CacheManager? cacheManager})
-      : _cache = cacheManager ?? PokemonSpriteCacheManager.instance;
+  SpriteCacheService({
+    CacheManager? cacheManager,
+    MemoryTheme? theme,
+  })  : _cache = cacheManager ?? ThemeSpriteCacheManager.instance,
+        _theme = theme ?? kPokemonTheme;
 
   final CacheManager _cache;
+  MemoryTheme _theme;
 
   static final SpriteCacheService instance = SpriteCacheService();
 
   @visibleForTesting
   static bool skipWarmupInTests = false;
 
-  String _cacheKey(PokemonInfo pokemon) => 'pokemon_${pokemon.id}';
+  MemoryTheme get theme => _theme;
 
-  Future<bool> isCached(PokemonInfo pokemon) async {
-    final file = await _cache.getFileFromCache(_cacheKey(pokemon));
+  void setTheme(MemoryTheme theme) {
+    _theme = theme;
+  }
+
+  String _cacheKey(CharacterInfo character) =>
+      '${_theme.id}_${character.id}';
+
+  Future<bool> isCached(CharacterInfo character) async {
+    final file = await _cache.getFileFromCache(_cacheKey(character));
     return file != null;
   }
 
   Future<bool> isFullyCached() async {
-    for (final pokemon in kPokemonCatalog) {
-      if (!await isCached(pokemon)) return false;
+    for (final character in _theme.catalog) {
+      if (!await isCached(character)) return false;
     }
     return true;
   }
 
   Future<int> cachedCount() async {
     var count = 0;
-    for (final pokemon in kPokemonCatalog) {
-      if (await isCached(pokemon)) count++;
+    for (final character in _theme.catalog) {
+      if (await isCached(character)) count++;
     }
     return count;
   }
 
-  /// Downloads any missing sprites. Yields progress after each Pokémon.
   Stream<CacheWarmProgress> warmCache() async* {
     if (skipWarmupInTests) {
       yield CacheWarmProgress(
-        completed: kPokemonCatalog.length,
-        total: kPokemonCatalog.length,
+        completed: _theme.catalog.length,
+        total: _theme.catalog.length,
         failed: 0,
       );
       return;
@@ -80,16 +91,16 @@ class SpriteCacheService {
 
     var completed = 0;
     var failed = 0;
-    final total = kPokemonCatalog.length;
+    final total = _theme.catalog.length;
 
-    for (final pokemon in kPokemonCatalog) {
+    for (final character in _theme.catalog) {
       try {
-        if (await isCached(pokemon)) {
+        if (await isCached(character)) {
           completed++;
         } else {
           await _cache.downloadFile(
-            pokemon.spriteUrl,
-            key: _cacheKey(pokemon),
+            character.imageUrl,
+            key: _cacheKey(character),
           );
           completed++;
         }
@@ -105,14 +116,14 @@ class SpriteCacheService {
     }
   }
 
-  Future<File?> getCachedFile(PokemonInfo pokemon) async {
+  Future<File?> getCachedFile(CharacterInfo character) async {
     try {
-      final cached = await _cache.getFileFromCache(_cacheKey(pokemon));
+      final cached = await _cache.getFileFromCache(_cacheKey(character));
       if (cached != null) return cached.file;
 
       return (await _cache.getSingleFile(
-        pokemon.spriteUrl,
-        key: _cacheKey(pokemon),
+        character.imageUrl,
+        key: _cacheKey(character),
       ));
     } catch (_) {
       return null;

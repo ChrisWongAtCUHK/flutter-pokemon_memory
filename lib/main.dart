@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'screens/menu_screen.dart';
+import 'themes/pokemon_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,20 +10,20 @@ void main() {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(const PokemonMemoryApp());
+  runApp(const AnimeMemoryApp());
 }
 
-class PokemonMemoryApp extends StatelessWidget {
-  const PokemonMemoryApp({super.key});
+class AnimeMemoryApp extends StatelessWidget {
+  const AnimeMemoryApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Pokémon Memory',
+      title: 'Anime Memory',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFE53935),
+          seedColor: kPokemonTheme.primaryColor,
           brightness: Brightness.light,
         ),
         useMaterial3: true,

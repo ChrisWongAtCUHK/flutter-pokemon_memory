@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../models/memory_card.dart';
-import 'cached_pokemon_sprite.dart';
+import '../themes/memory_theme.dart';
+import 'cached_character_sprite.dart';
 
 class FlippableCard extends StatefulWidget {
   const FlippableCard({
     super.key,
     required this.card,
+    required this.theme,
     required this.onTap,
     this.enabled = true,
   });
 
   final MemoryCard card;
+  final MemoryTheme theme;
   final VoidCallback onTap;
   final bool enabled;
 
@@ -76,27 +79,31 @@ class _FlippableCardState extends State<FlippableCard>
                     transform: Matrix4.identity()..rotateY(3.1415926535),
                     child: child,
                   )
-                : _CardBack(),
+                : _CardBack(theme: widget.theme),
           );
         },
-        child: _CardFront(card: widget.card),
+        child: _CardFront(card: widget.card, theme: widget.theme),
       ),
     );
   }
 }
 
 class _CardBack extends StatelessWidget {
+  const _CardBack({required this.theme});
+
+  final MemoryTheme theme;
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1E3A5F), Color(0xFF0D1B2A)],
+          colors: [theme.secondaryColor, theme.secondaryColor.withValues(alpha: 0.85)],
         ),
-        border: Border.all(color: const Color(0xFFFFD54F), width: 2),
+        border: Border.all(color: theme.accentColor, width: 2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x40000000),
@@ -105,17 +112,18 @@ class _CardBack extends StatelessWidget {
           ),
         ],
       ),
-      child: const Center(
-        child: Icon(Icons.catching_pokemon, color: Color(0xFFFFD54F), size: 36),
+      child: Center(
+        child: Icon(theme.cardBackIcon, color: theme.accentColor, size: 36),
       ),
     );
   }
 }
 
 class _CardFront extends StatelessWidget {
-  const _CardFront({required this.card});
+  const _CardFront({required this.card, required this.theme});
 
   final MemoryCard card;
+  final MemoryTheme theme;
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +133,7 @@ class _CardFront extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         color: matched ? const Color(0xFFE8F5E9) : Colors.white,
         border: Border.all(
-          color: matched ? const Color(0xFF43A047) : const Color(0xFFE53935),
+          color: matched ? const Color(0xFF43A047) : theme.primaryColor,
           width: 2,
         ),
         boxShadow: const [
@@ -143,15 +151,18 @@ class _CardFront extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(6),
-                child: CachedPokemonSprite(pokemon: card.pokemon),
+                child: CachedCharacterSprite(
+                  character: card.character,
+                  theme: theme,
+                ),
               ),
             ),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 4),
-              color: const Color(0xFFE53935),
+              color: theme.primaryColor,
               child: Text(
-                card.pokemon.name,
+                card.character.name,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

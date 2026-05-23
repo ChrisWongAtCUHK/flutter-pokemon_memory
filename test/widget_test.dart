@@ -6,10 +6,13 @@ void main() {
   setUp(() => SpriteCacheService.skipWarmupInTests = true);
   tearDown(() => SpriteCacheService.skipWarmupInTests = false);
 
-  testWidgets('shows title on menu', (tester) async {
-    await tester.pumpWidget(const PokemonMemoryApp());
+  testWidgets('shows title and themes on menu', (tester) async {
+    await tester.pumpWidget(const AnimeMemoryApp());
     await tester.pumpAndSettle();
-    expect(find.text('Pokémon Memory'), findsOneWidget);
+    expect(find.text('Anime Memory'), findsOneWidget);
+    expect(find.text('Pokémon'), findsOneWidget);
+    expect(find.text('One Piece'), findsOneWidget);
+    expect(find.text('Naruto'), findsOneWidget);
     expect(find.text('Easy'), findsOneWidget);
   });
 }

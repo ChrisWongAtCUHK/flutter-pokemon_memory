@@ -1,15 +1,15 @@
-import '../data/pokemon_catalog.dart';
+import 'character_info.dart';
 
 class MemoryCard {
   MemoryCard({
     required this.pairId,
-    required this.pokemon,
+    required this.character,
     this.isFaceUp = false,
     this.isMatched = false,
   });
 
   final int pairId;
-  final PokemonInfo pokemon;
+  final CharacterInfo character;
   bool isFaceUp;
   bool isMatched;
 }

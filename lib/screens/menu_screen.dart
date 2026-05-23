@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../data/pokemon_catalog.dart';
 import '../services/sprite_cache_service.dart';
+import '../themes/memory_theme.dart';
+import '../themes/theme_registry.dart';
 import 'game_screen.dart';
 
 enum GameDifficulty { easy, medium, hard }
@@ -63,6 +64,7 @@ class MenuScreen extends StatefulWidget {
 
 class _MenuScreenState extends State<MenuScreen> {
   late final SpriteCacheService _cache;
+  MemoryTheme _selectedTheme = kAllThemes.first;
   bool _cacheReady = false;
   bool _warming = false;
   double _progress = 0;
@@ -73,7 +75,15 @@ class _MenuScreenState extends State<MenuScreen> {
   void initState() {
     super.initState();
     _cache = widget.cacheService ?? SpriteCacheService.instance;
+    _cache.setTheme(_selectedTheme);
     _prepareCache();
+  }
+
+  Future<void> _onThemeSelected(MemoryTheme theme) async {
+    if (_selectedTheme.id == theme.id || _warming) return;
+    setState(() => _selectedTheme = theme);
+    _cache.setTheme(theme);
+    await _prepareCache();
   }
 
   Future<void> _prepareCache() async {
@@ -81,7 +91,8 @@ class _MenuScreenState extends State<MenuScreen> {
       if (!mounted) return;
       setState(() {
         _cacheReady = true;
-        _cacheStatus = 'Offline ready · ${kPokemonCatalog.length} sprites cached';
+        _cacheStatus =
+            'Offline ready · ${_selectedTheme.catalog.length} ${_selectedTheme.name} images';
       });
       return;
     }
@@ -94,7 +105,7 @@ class _MenuScreenState extends State<MenuScreen> {
       _cacheReady = false;
       _progress = 0;
       _failedDownloads = 0;
-      _cacheStatus = 'Downloading sprites for offline play…';
+      _cacheStatus = 'Downloading ${_selectedTheme.name} images…';
     });
 
     await for (final progress in _cache.warmCache()) {
@@ -113,14 +124,15 @@ class _MenuScreenState extends State<MenuScreen> {
       _warming = false;
       if (ready) {
         _cacheReady = true;
-        _cacheStatus = 'Offline ready · ${kPokemonCatalog.length} sprites cached';
-      } else if (_failedDownloads > 0) {
-        _cacheReady = cached >= kPokemonCatalog.length ~/ 2;
         _cacheStatus =
-            '$cached/${kPokemonCatalog.length} cached · connect to retry';
+            'Offline ready · ${_selectedTheme.catalog.length} ${_selectedTheme.name} images';
+      } else if (_failedDownloads > 0) {
+        _cacheReady = cached >= _selectedTheme.catalog.length ~/ 2;
+        _cacheStatus =
+            '$cached/${_selectedTheme.catalog.length} cached · connect to retry';
       } else {
         _cacheReady = true;
-        _cacheStatus = 'Sprites cached';
+        _cacheStatus = 'Images cached';
       }
     });
   }
@@ -128,58 +140,90 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   Widget build(BuildContext context) {
     final canPlay = _cacheReady && !_warming;
+    final theme = _selectedTheme;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+            colors: [theme.secondaryColor, theme.secondaryColor.withValues(alpha: 0.92)],
           ),
         ),
         child: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               children: [
-                const SizedBox(height: 32),
-                const Icon(Icons.catching_pokemon, size: 72, color: Colors.amber),
+                const SizedBox(height: 24),
+                Icon(theme.menuIcon, size: 64, color: theme.accentColor),
                 const SizedBox(height: 12),
                 Text(
-                  'Pokémon Memory',
+                  'Anime Memory',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  'Flip cards and find matching pairs',
+                  theme.tagline,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white70,
                       ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Choose theme',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _ThemePicker(
+                  themes: kAllThemes,
+                  selected: _selectedTheme,
+                  onSelected: _onThemeSelected,
+                  enabled: !_warming,
+                ),
+                const SizedBox(height: 20),
                 _CacheStatusBanner(
                   status: _cacheStatus,
                   warming: _warming,
                   progress: _progress,
+                  accent: theme.accentColor,
                   onRetry: _failedDownloads > 0 && !_warming ? _warmCache : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Difficulty',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 ...GameDifficulty.values.map(
                   (d) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _DifficultyButton(
                       difficulty: d,
+                      theme: theme,
                       enabled: canPlay,
                     ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 24),
                 Text(
-                  'Sprites cached on device · no network needed after download',
+                  'Each theme caches separately · play offline after download',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.white54,
@@ -195,17 +239,84 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 }
 
+class _ThemePicker extends StatelessWidget {
+  const _ThemePicker({
+    required this.themes,
+    required this.selected,
+    required this.onSelected,
+    required this.enabled,
+  });
+
+  final List<MemoryTheme> themes;
+  final MemoryTheme selected;
+  final ValueChanged<MemoryTheme> onSelected;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: themes.map((theme) {
+        final isSelected = theme.id == selected.id;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: theme.id != themes.last.id ? 8 : 0,
+            ),
+            child: Material(
+              color: isSelected
+                  ? theme.primaryColor
+                  : Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                onTap: enabled || isSelected
+                    ? () => onSelected(theme)
+                    : null,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Column(
+                    children: [
+                      Icon(
+                        theme.menuIcon,
+                        color: isSelected ? Colors.white : Colors.white70,
+                        size: 26,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        theme.name,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.white70,
+                          fontSize: 12,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
 class _CacheStatusBanner extends StatelessWidget {
   const _CacheStatusBanner({
     required this.status,
     required this.warming,
     required this.progress,
+    required this.accent,
     this.onRetry,
   });
 
   final String status;
   final bool warming;
   final double progress;
+  final Color accent;
   final VoidCallback? onRetry;
 
   @override
@@ -227,7 +338,7 @@ class _CacheStatusBanner extends StatelessWidget {
                 warming
                     ? Icons.cloud_download_outlined
                     : Icons.offline_pin_outlined,
-                color: Colors.amber,
+                color: accent,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -240,7 +351,7 @@ class _CacheStatusBanner extends StatelessWidget {
               if (onRetry != null)
                 TextButton(
                   onPressed: onRetry,
-                  style: TextButton.styleFrom(foregroundColor: Colors.amber),
+                  style: TextButton.styleFrom(foregroundColor: accent),
                   child: const Text('Retry'),
                 ),
             ],
@@ -253,7 +364,7 @@ class _CacheStatusBanner extends StatelessWidget {
                 value: progress > 0 ? progress : null,
                 minHeight: 6,
                 backgroundColor: Colors.white24,
-                color: Colors.amber,
+                color: accent,
               ),
             ),
           ],
@@ -266,10 +377,12 @@ class _CacheStatusBanner extends StatelessWidget {
 class _DifficultyButton extends StatelessWidget {
   const _DifficultyButton({
     required this.difficulty,
+    required this.theme,
     required this.enabled,
   });
 
   final GameDifficulty difficulty;
+  final MemoryTheme theme;
   final bool enabled;
 
   @override
@@ -279,7 +392,7 @@ class _DifficultyButton extends StatelessWidget {
       child: FilledButton(
         style: FilledButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF1565C0),
+          foregroundColor: theme.primaryColor,
           disabledBackgroundColor: Colors.white38,
           disabledForegroundColor: Colors.blueGrey,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
@@ -289,7 +402,10 @@ class _DifficultyButton extends StatelessWidget {
             ? () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => GameScreen(difficulty: difficulty),
+                    builder: (_) => GameScreen(
+                      theme: theme,
+                      difficulty: difficulty,
+                    ),
                   ),
                 );
               }
@@ -311,7 +427,7 @@ class _DifficultyButton extends StatelessWidget {
                     difficulty.subtitle,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.blue.shade700.withValues(alpha: 0.8),
+                      color: theme.primaryColor.withValues(alpha: 0.75),
                     ),
                   ),
                 ],

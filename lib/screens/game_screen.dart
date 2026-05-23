@@ -3,16 +3,21 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:vibration/vibration.dart';
 
-import '../data/pokemon_catalog.dart';
+import '../models/character_info.dart';
 import '../models/memory_card.dart';
+import '../themes/memory_theme.dart';
 import '../widgets/flippable_card.dart';
 import 'menu_screen.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, required this.difficulty});
+  const GameScreen({
+    super.key,
+    required this.theme,
+    required this.difficulty,
+  });
 
+  final MemoryTheme theme;
   final GameDifficulty difficulty;
 
   @override
@@ -46,14 +51,15 @@ class _GameScreenState extends State<GameScreen> {
 
   void _startNewGame() {
     final pairCount = widget.difficulty.pairCount;
-    final pool = List<PokemonInfo>.from(kPokemonCatalog)..shuffle(_random);
+    final pool = List<CharacterInfo>.from(widget.theme.catalog)
+      ..shuffle(_random);
     final selected = pool.take(pairCount).toList();
 
     final deck = <MemoryCard>[];
     for (var i = 0; i < selected.length; i++) {
-      final pokemon = selected[i];
-      deck.add(MemoryCard(pairId: i, pokemon: pokemon));
-      deck.add(MemoryCard(pairId: i, pokemon: pokemon));
+      final character = selected[i];
+      deck.add(MemoryCard(pairId: i, character: character));
+      deck.add(MemoryCard(pairId: i, character: character));
     }
     deck.shuffle(_random);
 
@@ -71,10 +77,7 @@ class _GameScreenState extends State<GameScreen> {
     final card = _cards[index];
     if (_busy || card.isMatched || card.isFaceUp) return;
 
-    // 檢查裝置是否支援震動，並只震動 30 毫秒（非常輕微短促的點擊感）
-    if (await Vibration.hasVibrator()) {
-      Vibration.vibrate(duration: 200);
-    }
+    HapticFeedback.lightImpact();
     setState(() {
       card.isFaceUp = true;
       _flippedIndices.add(index);
@@ -119,7 +122,7 @@ class _GameScreenState extends State<GameScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('You caught them all!'),
+        title: Text(widget.theme.winMessage),
         content: Text('Moves: $_moves\nTime: ${_formatTime(_elapsedSeconds)}'),
         actions: [
           TextButton(
@@ -154,12 +157,13 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final columns = widget.difficulty.columnCount;
+    final theme = widget.theme;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text(widget.difficulty.label),
-        backgroundColor: const Color(0xFFE53935),
+        title: Text('${theme.name} · ${widget.difficulty.label}'),
+        backgroundColor: theme.primaryColor,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -181,16 +185,19 @@ class _GameScreenState extends State<GameScreen> {
                     icon: Icons.touch_app,
                     label: 'Moves',
                     value: '$_moves',
+                    accent: theme.primaryColor,
                   ),
                   _StatChip(
                     icon: Icons.timer_outlined,
                     label: 'Time',
                     value: _formatTime(_elapsedSeconds),
+                    accent: theme.primaryColor,
                   ),
                   _StatChip(
                     icon: Icons.check_circle_outline,
                     label: 'Pairs',
                     value: '$_matchedPairs/${widget.difficulty.pairCount}',
+                    accent: theme.primaryColor,
                   ),
                 ],
               ),
@@ -213,6 +220,7 @@ class _GameScreenState extends State<GameScreen> {
                   itemBuilder: (context, index) {
                     return FlippableCard(
                       card: _cards[index],
+                      theme: theme,
                       enabled: !_busy,
                       onTap: () => _onCardTap(index),
                     );
@@ -232,11 +240,13 @@ class _StatChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    required this.accent,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +265,7 @@ class _StatChip extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 18, color: const Color(0xFFE53935)),
+          Icon(icon, size: 18, color: accent),
           const SizedBox(height: 4),
           Text(
             value,

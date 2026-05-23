@@ -1,23 +1,26 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../data/pokemon_catalog.dart';
+import '../models/character_info.dart';
 import '../services/sprite_cache_service.dart';
+import '../themes/memory_theme.dart';
 
-class CachedPokemonSprite extends StatelessWidget {
-  const CachedPokemonSprite({
+class CachedCharacterSprite extends StatelessWidget {
+  const CachedCharacterSprite({
     super.key,
-    required this.pokemon,
+    required this.character,
+    required this.theme,
   });
 
-  final PokemonInfo pokemon;
+  final CharacterInfo character;
+  final MemoryTheme theme;
 
   @override
   Widget build(BuildContext context) {
     return CachedNetworkImage(
-      imageUrl: pokemon.spriteUrl,
-      cacheKey: 'pokemon_${pokemon.id}',
-      cacheManager: PokemonSpriteCacheManager.instance,
+      imageUrl: character.imageUrl,
+      cacheKey: '${theme.id}_${character.id}',
+      cacheManager: ThemeSpriteCacheManager.instance,
       fit: BoxFit.contain,
       memCacheWidth: 180,
       placeholder: (context, url) => const Center(
