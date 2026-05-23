@@ -76,40 +76,40 @@ const MemoryTheme kOnePieceTheme = MemoryTheme(
           'https://cdn.myanimelist.net/images/characters/15/307148.webp',
     ),
     CharacterInfo(
-      id: 853,
+      id: 2072,
       name: 'Ace',
       imageUrl:
-          'https://cdn.myanimelist.net/images/characters/13/110227.webp',
+          'https://cdn.myanimelist.net/images/characters/2/72220.webp',
     ),
     CharacterInfo(
-      id: 737,
+      id: 727,
       name: 'Shanks',
       imageUrl:
-          'https://cdn.myanimelist.net/images/characters/3/51226.webp',
+          'https://cdn.myanimelist.net/images/characters/9/307639.webp',
     ),
     CharacterInfo(
-      id: 4087,
+      id: 13767,
       name: 'Law',
       imageUrl:
-          'https://cdn.myanimelist.net/images/characters/16/313771.webp',
+          'https://cdn.myanimelist.net/images/characters/10/258757.webp',
     ),
     CharacterInfo(
-      id: 1742,
+      id: 2751,
       name: 'Whitebeard',
       imageUrl:
-          'https://cdn.myanimelist.net/images/characters/9/316615.webp',
+          'https://cdn.myanimelist.net/images/characters/3/100236.webp',
     ),
     CharacterInfo(
-      id: 43672,
+      id: 16342,
       name: 'Hancock',
       imageUrl:
-          'https://cdn.myanimelist.net/images/characters/9/310308.webp',
+          'https://cdn.myanimelist.net/images/characters/14/146013.webp',
     ),
     CharacterInfo(
-      id: 45679,
+      id: 32893,
       name: 'Sabo',
       imageUrl:
-          'https://cdn.myanimelist.net/images/characters/9/310309.webp',
+          'https://cdn.myanimelist.net/images/characters/15/131855.webp',
     ),
   ],
 );

@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../models/character_info.dart';
-import '../services/sprite_cache_service.dart';
+import '../services/sprite_cache_service.dart' show ThemeSpriteCacheManager, kImageDownloadHeaders;
 import '../themes/memory_theme.dart';
 
 class CachedCharacterSprite extends StatelessWidget {
@@ -21,6 +21,7 @@ class CachedCharacterSprite extends StatelessWidget {
       imageUrl: character.imageUrl,
       cacheKey: '${theme.id}_${character.id}',
       cacheManager: ThemeSpriteCacheManager.instance,
+      httpHeaders: kImageDownloadHeaders,
       fit: BoxFit.contain,
       memCacheWidth: 180,
       placeholder: (context, url) => const Center(

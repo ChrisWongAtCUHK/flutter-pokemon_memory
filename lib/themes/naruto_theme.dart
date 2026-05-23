@@ -106,10 +106,10 @@ const MemoryTheme kNarutoTheme = MemoryTheme(
           'https://cdn.myanimelist.net/images/characters/12/450359.webp',
     ),
     CharacterInfo(
-      id: 2424,
+      id: 2455,
       name: 'Orochimaru',
       imageUrl:
-          'https://cdn.myanimelist.net/images/characters/9/284123.webp',
+          'https://cdn.myanimelist.net/images/characters/3/162089.webp',
     ),
   ],
 );

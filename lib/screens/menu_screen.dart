@@ -99,16 +99,18 @@ class _MenuScreenState extends State<MenuScreen> {
     await _warmCache();
   }
 
-  Future<void> _warmCache() async {
+  Future<void> _warmCache({bool forceRefresh = false}) async {
     setState(() {
       _warming = true;
       _cacheReady = false;
       _progress = 0;
       _failedDownloads = 0;
-      _cacheStatus = 'Downloading ${_selectedTheme.name} images…';
+      _cacheStatus = forceRefresh
+          ? 'Retrying ${_selectedTheme.name} downloads…'
+          : 'Downloading ${_selectedTheme.name} images…';
     });
 
-    await for (final progress in _cache.warmCache()) {
+    await for (final progress in _cache.warmCache(forceRefresh: forceRefresh)) {
       if (!mounted) return;
       setState(() {
         _progress = progress.fraction;
@@ -197,7 +199,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   warming: _warming,
                   progress: _progress,
                   accent: theme.accentColor,
-                  onRetry: _failedDownloads > 0 && !_warming ? _warmCache : null,
+                  onRetry: !_warming ? () => _warmCache(forceRefresh: true) : null,
                 ),
                 const SizedBox(height: 20),
                 Align(
